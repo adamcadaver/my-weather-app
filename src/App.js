@@ -1,21 +1,17 @@
 import React from 'react';
 import './App.css';
-import ZipCodeForm from './ZipCodeForm';
 
 class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      // zipcode: '10010'
+     favorites: []
     };
   };
   render () {
     return (
       <div className="App">
-        <header className="App-header">
-          <ZipCodeForm zipcode={this.state.zipcode}></ZipCodeForm>
-          {this.state.zipcode}
-        </header>
+        <header className="App-header">My Weather App</header>
       </div>
     );
   }
