@@ -3,9 +3,7 @@ import React from "react";
 const SevenDayForecastRow = ({ name, temperature, icon, shortForecast }) => {
   return (
     <tr>
-      <td>
-        {name}
-      </td>
+      <td>{name}</td>
       <td>
         <img src={icon} alt="" />
       </td>

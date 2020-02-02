@@ -41,8 +41,7 @@ class App extends React.Component {
     let error;
     if (response.isAxiosError) {
       error = "Forecast not available for this zipcode. Try another.";
-    }
-    else if (response.stack) {
+    } else if (response.stack) {
       error = "Unable to find this zipcode. Try another.";
     }
     this.setState({
