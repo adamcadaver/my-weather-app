@@ -1,13 +1,18 @@
 import React from "react";
 import "./App.css";
+const { localStorage } = window;
 
 const getLocalFavorites = () => {
-  const s = window.localStorage;
-  s.clear();
-  const favorites = s.getItem("favorites");
+  const favorites = localStorage.getItem("favorites");
   if (favorites === null) {
-    s.setItem("favorites", []);
-    return [];
+    return new Set();
+  } else {
+    return new Set(
+      favorites
+        .trim()
+        .split(",")
+        .map(v => parseInt(v, 10))
+    );
   }
 };
 
@@ -17,7 +22,11 @@ const FavoriteItem = ({ value, isSelected, handleClick }) => {
     styles += " active";
   }
   return (
-    <li className={styles} onClick={() => handleClick(value)}>
+    <li
+      className={styles}
+      key={value.toString()}
+      onClick={() => handleClick(value)}
+    >
       {value}
     </li>
   );
@@ -43,15 +52,15 @@ const FavoritesList = ({ items, selected, handleClick }) => {
 class App extends React.Component {
   constructor(props) {
     super(props);
-    // const favorites = getLocalFavorites()
     this.state = {
-      favorites: new Set([10010, 12345, 54353]),
+      favorites: getLocalFavorites(),
       selected: undefined,
       query: ""
     };
     this.handleSubmit = this.handleSubmit.bind(this);
     this.handleChange = this.handleChange.bind(this);
     this.handleClick = this.handleClick.bind(this);
+    this.addFavorite = this.addFavorite.bind(this);
   }
 
   handleSubmit(event) {
@@ -70,6 +79,14 @@ class App extends React.Component {
     this.setState({
       query: event.target.value
     });
+  }
+
+  addFavorite(event) {
+    const favorites = new Set(this.state.favorites);
+    favorites.add(this.state.selected);
+    this.setState({ favorites });
+    localStorage.setItem("favorites", Array.from(favorites));
+    event.preventDefault();
   }
 
   render() {
@@ -110,6 +127,13 @@ class App extends React.Component {
             </div>
             <div className="row">
               <h3>{subTitle}</h3>
+              {subTitle ? (
+                <button type="submit" onClick={this.addFavorite}>
+                  Add as a favorite
+                </button>
+              ) : (
+                ""
+              )}
             </div>
           </div>
         </div>
