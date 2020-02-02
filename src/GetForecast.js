@@ -1,5 +1,4 @@
 import Axios from "axios";
-import mock from "./mock";
 
 var sydney = new window.google.maps.LatLng(-33.867, 151.195);
 const map = new window.google.maps.Map(document.getElementById("map"), {
@@ -10,23 +9,27 @@ const service = new window.google.maps.places.PlacesService(map);
 
 const getLatLng = zipcode => {
   return new Promise((resolve, reject) => {
-    service.findPlaceFromQuery(
-      {
-        query: zipcode,
-        fields: ["geometry"]
-      },
-      ([response]) => {
-        try {
-          const result = {
-            lat: response.geometry.location.lat(),
-            lng: response.geometry.location.lng()
-          };
-          resolve(result);
-        } catch (e) {
-          reject(e);
+    try {
+      service.findPlaceFromQuery(
+        {
+          query: zipcode,
+          fields: ["geometry"]
+        },
+        ([response]) => {
+          try {
+            const result = {
+              lat: response.geometry.location.lat(),
+              lng: response.geometry.location.lng()
+            };
+            resolve(result);
+          } catch (e) {
+            reject(e);
+          }
         }
-      }
-    );
+      );
+    } catch (e) {
+      return Promise.reject(e);
+    }
   });
 };
 
@@ -58,11 +61,7 @@ const getForecast = zipcode => {
       sevenDay: sevenDay.data.properties.periods,
       hourly: currentDayOnly(new Date(), hourly.data.properties.periods)
     }))
-    .catch(() => ({
-      // error: 'No Forecast',
-      hourly: currentDayOnly(new Date(), mock.hourly.properties.periods),
-      sevenDay: mock.sevenDay.properties.periods
-    }));
+    .catch(e => e);
 };
 
 export default getForecast;

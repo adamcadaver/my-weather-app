@@ -1,5 +1,4 @@
 import React from "react";
-import "./App.css";
 import FavoritesList from "./FavoritesList";
 import getForecast from "./GetForecast";
 import StoredFavorites from "./StoredFavorites";
@@ -38,11 +37,18 @@ class App extends React.Component {
       query: "",
       loading: true
     });
-    const { hourly, sevenDay, error } = await getForecast(zipcode);
+    const response = await getForecast(zipcode);
+    let error;
+    if (response.isAxiosError) {
+      error = "Forecast not available for this zipcode. Try another.";
+    }
+    else if (response.stack) {
+      error = "Unable to find this zipcode. Try another.";
+    }
     this.setState({
       loading: false,
-      hourly,
-      sevenDay,
+      hourly: response.hourly,
+      sevenDay: response.sevenDay,
       error
     });
   }

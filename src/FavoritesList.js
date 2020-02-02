@@ -1,5 +1,4 @@
 import React from "react";
-import "./App.css";
 
 const FavoriteItem = ({ value, isSelected, handleClick, handleRemove }) => {
   let styles = "list-group-item list-group-item-action col";

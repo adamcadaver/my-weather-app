@@ -2,8 +2,10 @@ import React from "react";
 
 const SevenDayForecastRow = ({ name, temperature, icon, shortForecast }) => {
   return (
-    <tr className="">
-      <td>{name}</td>
+    <tr>
+      <td>
+        {name}
+      </td>
       <td>
         <img src={icon} alt="" />
       </td>
@@ -18,17 +20,19 @@ const SevenDayForecastRow = ({ name, temperature, icon, shortForecast }) => {
 const SevenDayForecastTable = ({ sevenDay }) => {
   return (
     <table className="table table-sm">
-      {sevenDay.map(forecast => {
-        return (
-          <SevenDayForecastRow
-            key={forecast.number}
-            name={forecast.name}
-            temperature={forecast.temperature}
-            icon={forecast.icon}
-            shortForecast={forecast.shortForecast}
-          />
-        );
-      })}
+      <tbody>
+        {sevenDay.map(forecast => {
+          return (
+            <SevenDayForecastRow
+              key={forecast.number}
+              name={forecast.name}
+              temperature={forecast.temperature}
+              icon={forecast.icon}
+              shortForecast={forecast.shortForecast}
+            />
+          );
+        })}
+      </tbody>
     </table>
   );
 };
@@ -36,17 +40,19 @@ const SevenDayForecastTable = ({ sevenDay }) => {
 const HourlyForecastTable = ({ hourly }) => {
   return (
     <table className="table table-sm">
-      {hourly.map(forecast => {
-        return (
-          <HourlyForecastRow
-            key={forecast.number}
-            startTime={forecast.startTime}
-            temperature={forecast.temperature}
-            icon={forecast.icon}
-            shortForecast={forecast.shortForecast}
-          />
-        );
-      })}
+      <tbody>
+        {hourly.map(forecast => {
+          return (
+            <HourlyForecastRow
+              key={forecast.number}
+              startTime={forecast.startTime}
+              temperature={forecast.temperature}
+              icon={forecast.icon}
+              shortForecast={forecast.shortForecast}
+            />
+          );
+        })}
+      </tbody>
     </table>
   );
 };
@@ -57,7 +63,7 @@ const HourlyForecastRow = ({ startTime, temperature, icon, shortForecast }) => {
   const isMorning = hourNum < 12;
   const timeSuffix = isMorning ? " AM" : " PM";
   return (
-    <tr className="">
+    <tr>
       <td>{(hourNum % 12) + timeSuffix}</td>
       <td>
         <img src={icon} alt="" />
@@ -96,26 +102,24 @@ class ForecastDisplay extends React.Component {
         <div>
           <ul className="nav nav-tabs">
             <li className="nav-item">
-              <a
+              <button
                 className={isHourly ? "nav-link active" : "nav-link"}
-                href="#"
                 onClick={() => {
                   this.handleClick(true);
                 }}
               >
                 Hourly
-              </a>
+              </button>
             </li>
             <li className="nav-item ">
-              <a
+              <button
                 className={!isHourly ? "nav-link active" : "nav-link"}
-                href="#"
                 onClick={() => {
                   this.handleClick(false);
                 }}
               >
                 Seven Day
-              </a>
+              </button>
             </li>
           </ul>
           <div style={isHourly ? {} : { display: "none" }}>
