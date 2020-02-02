@@ -1,74 +1,21 @@
 import React from "react";
 import "./App.css";
 import FavoritesList from "./FavoritesList";
-import Axios from "axios";
-
-var sydney = new window.google.maps.LatLng(-33.867, 151.195);
-const map = new window.google.maps.Map(document.getElementById('map'), {center: sydney, zoom: 15});
-const service = new window.google.maps.places.PlacesService(map)
-
-const getLatLng = (zipcode) => {
-  return new Promise((resolve, reject) => {
-    service.findPlaceFromQuery({
-      query: zipcode,
-      fields: ['geometry']
-    },
-    ([response]) => {
-      try {
-        const result = {
-          lat: response.geometry.location.lat(),
-          lng: response.geometry.location.lng()
-        };
-        resolve(result);
-      }
-      catch (e) {
-        reject(e);
-      }
-    });
-  });
-};
-
-const getLocalFavorites = () => {
-  const favorites = localStorage.getItem("favorites");
-  if (favorites === null || favorites === '') {
-    return new Set();
-  }
-  return new Set(favorites.trim().split(","));
-};
-
-const currentDayOnly = (v) => {
-  return v.slice(0, 24);
-}
-
-
-const getForecast = (zipcode) => {
-  return getLatLng(zipcode)
-    .then(({lat, lng}) => {
-      return Axios.get(`https://api.weather.gov/points/${lat},${lng}`)
-    })
-    .then((response) => {
-      return Promise.all([
-        Axios.get(response.data.properties.forecast),
-        Axios.get(response.data.properties.forecastHourly)
-      ]);
-    })
-    .then(([sevenDay, hourly]) => {
-      return {
-        sevenDay: sevenDay.data.properties.periods,
-        hourly: currentDayOnly(hourly.data.properties.periods),
-      };
-    })
-}
+import getForecast from './GetForecast';
+import StoredFavorites from './StoredFavorites';
+import ForecastDisplay from './ForecastDisplay';
 
 class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      favorites: getLocalFavorites(),
+      favorites: StoredFavorites.get(),
       selected: undefined,
       query: "",
       loading: false,
-      value: undefined
+      hourly: undefined,
+      sevenDay: undefined,
+      error: undefined
     };
     this.handleSubmit = this.handleSubmit.bind(this);
     this.handleChange = this.handleChange.bind(this);
@@ -83,20 +30,19 @@ class App extends React.Component {
     event.preventDefault();
   }
 
-  handleClick(zipcode) {
+  async handleClick(zipcode) {
     this.setState({
       selected: zipcode,
       query: "",
       loading: true
     });
-    return getForecast(zipcode)
-      .then((resp) => {
-        console.log(resp)
-        this.setState({
-          loading: false,
-          value: JSON.stringify(resp)
-        });
-      });
+    const { hourly, sevenDay, error} = await getForecast(zipcode);
+  this.setState({
+      loading: false,
+      hourly,
+      sevenDay,
+      error
+    });
   }
 
   handleChange(event) {
@@ -109,7 +55,7 @@ class App extends React.Component {
     const favorites = new Set(this.state.favorites);
     favorites.add(this.state.selected);
     this.setState({ favorites });
-    localStorage.setItem("favorites", Array.from(favorites));
+    StoredFavorites.set(favorites);
     event.preventDefault();
   }
 
@@ -117,11 +63,19 @@ class App extends React.Component {
     const favorites = new Set(this.state.favorites);
     favorites.delete(zipcode)
     this.setState({ favorites });
-    localStorage.setItem("favorites", Array.from(favorites));
+    StoredFavorites.set(favorites);
   }
 
   render() {
-    const {selected, favorites, query, loading, value="" } = this.state;
+    const {
+      selected,
+      favorites,
+      query,
+      loading,
+      hourly,
+      sevenDay,
+      error,
+    } = this.state;
     const subTitle = selected
       ? `Weather for ${selected}`
       : "";
@@ -164,12 +118,15 @@ class App extends React.Component {
                 <button type="submit" onClick={this.addFavorite}>
                   Add as a favorite
                 </button>
-              ) : (
-                ""
-              )}
+              ) : ("")}
             </div>
             <div className ="row">
-              {loading ? "Loading..." : value}
+              <ForecastDisplay
+                hourly={hourly}
+                sevenDay={sevenDay}
+                loading={loading}
+                error={error}
+                />
             </div>
           </div>
         </div>
