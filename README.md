@@ -12,5 +12,5 @@ I think so! Very Spartan in terms of styling so it could look better.
 1. Tests - This is the first time I have written react so I was exploring a lot. For any production code I would add unit + integration tests.
 2. Defensive Programming - More error catching, limit the amount of requests users can send
 3. Caching - forecasts don't change every second so we could cache the forecasts and have the cache expiry after 30 minutes for example.
-4. Styling - not my strong suit but good enough to a POC.
+4. Styling - not my strong suit but good enough for a POC.
 5. Add support for full addresses - Given this is my first foray into React, I thought it would be a good idea to limit the scope. the API to get LatLngs for full addresses is the same so this would be fairly quick to do.
