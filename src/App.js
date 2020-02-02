@@ -25,9 +25,11 @@ class App extends React.Component {
 
   handleSubmit(event) {
     const { query } = this.state;
-    // zipcodes are a minimum of 5 digits
-    // https://en.wikipedia.org/wiki/ZIP_Code
-    this.handleClick(query.padStart(5, "0"));
+    if (query != "") {
+      // zipcodes are a minimum of 5 digits
+      // https://en.wikipedia.org/wiki/ZIP_Code
+      this.handleClick(query.padStart(5, "0"));
+    }
     event.preventDefault();
   }
 
