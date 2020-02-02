@@ -1,53 +1,64 @@
 import React from "react";
 import "./App.css";
-const { localStorage } = window;
+import FavoritesList from "./FavoritesList";
+import Axios from "axios";
+
+var sydney = new window.google.maps.LatLng(-33.867, 151.195);
+const map = new window.google.maps.Map(document.getElementById('map'), {center: sydney, zoom: 15});
+const service = new window.google.maps.places.PlacesService(map)
+
+const getLatLng = (zipcode) => {
+  return new Promise((resolve, reject) => {
+    service.findPlaceFromQuery({
+      query: zipcode,
+      fields: ['geometry']
+    },
+    ([response]) => {
+      try {
+        const result = {
+          lat: response.geometry.location.lat(),
+          lng: response.geometry.location.lng()
+        };
+        resolve(result);
+      }
+      catch (e) {
+        reject(e);
+      }
+    });
+  });
+};
 
 const getLocalFavorites = () => {
   const favorites = localStorage.getItem("favorites");
-  if (favorites === null) {
+  if (favorites === null || favorites === '') {
     return new Set();
-  } else {
-    return new Set(
-      favorites
-        .trim()
-        .split(",")
-        .map(v => parseInt(v, 10))
-    );
   }
+  return new Set(favorites.trim().split(","));
 };
 
-const FavoriteItem = ({ value, isSelected, handleClick }) => {
-  let styles = "list-group-item list-group-item-action";
-  if (isSelected) {
-    styles += " active";
-  }
-  return (
-    <li
-      className={styles}
-      key={value.toString()}
-      onClick={() => handleClick(value)}
-    >
-      {value}
-    </li>
-  );
-};
+const currentDayOnly = (v) => {
+  return v.slice(0, 24);
+}
 
-const FavoritesList = ({ items, selected, handleClick }) => {
-  if (items === undefined || items.size === 0) {
-    return "No Favorites";
-  }
-  return (
-    <ul className="list-group">
-      {Array.from(items).map(zipcode => (
-        <FavoriteItem
-          value={zipcode}
-          isSelected={zipcode === selected}
-          handleClick={handleClick}
-        />
-      ))}
-    </ul>
-  );
-};
+
+const getForecast = (zipcode) => {
+  return getLatLng(zipcode)
+    .then(({lat, lng}) => {
+      return Axios.get(`https://api.weather.gov/points/${lat},${lng}`)
+    })
+    .then((response) => {
+      return Promise.all([
+        Axios.get(response.data.properties.forecast),
+        Axios.get(response.data.properties.forecastHourly)
+      ]);
+    })
+    .then(([sevenDay, hourly]) => {
+      return {
+        sevenDay: sevenDay.data.properties.periods,
+        hourly: currentDayOnly(hourly.data.properties.periods),
+      };
+    })
+}
 
 class App extends React.Component {
   constructor(props) {
@@ -55,24 +66,37 @@ class App extends React.Component {
     this.state = {
       favorites: getLocalFavorites(),
       selected: undefined,
-      query: ""
+      query: "",
+      loading: false,
+      value: undefined
     };
     this.handleSubmit = this.handleSubmit.bind(this);
     this.handleChange = this.handleChange.bind(this);
     this.handleClick = this.handleClick.bind(this);
     this.addFavorite = this.addFavorite.bind(this);
+    this.removeFavorite = this.removeFavorite.bind(this);
   }
 
   handleSubmit(event) {
-    this.handleClick(this.state.query);
+    const { query } = this.state;
+    this.handleClick(query.padStart(5, '0'));
     event.preventDefault();
   }
 
   handleClick(zipcode) {
     this.setState({
       selected: zipcode,
-      query: ""
+      query: "",
+      loading: true
     });
+    return getForecast(zipcode)
+      .then((resp) => {
+        console.log(resp)
+        this.setState({
+          loading: false,
+          value: JSON.stringify(resp)
+        });
+      });
   }
 
   handleChange(event) {
@@ -89,9 +113,17 @@ class App extends React.Component {
     event.preventDefault();
   }
 
+  removeFavorite(zipcode) {
+    const favorites = new Set(this.state.favorites);
+    favorites.delete(zipcode)
+    this.setState({ favorites });
+    localStorage.setItem("favorites", Array.from(favorites));
+  }
+
   render() {
-    const subTitle = this.state.selected
-      ? `Weather for ${this.state.selected}`
+    const {selected, favorites, query, loading, value="" } = this.state;
+    const subTitle = selected
+      ? `Weather for ${selected}`
       : "";
     return (
       <div className="container">
@@ -105,9 +137,10 @@ class App extends React.Component {
             </div>
             <div className="row">
               <FavoritesList
-                items={this.state.favorites}
-                selected={this.state.selected}
+                items={favorites}
+                selected={selected}
                 handleClick={this.handleClick}
+                handleRemove={this.removeFavorite}
               />
             </div>
           </div>
@@ -117,7 +150,7 @@ class App extends React.Component {
                 <input
                   type="number"
                   name="zipcodeInput"
-                  value={this.state.query}
+                  value={query}
                   onChange={this.handleChange}
                 />
                 <button type="submit" name="submit" onClick={this.handleSubmit}>
@@ -127,13 +160,16 @@ class App extends React.Component {
             </div>
             <div className="row">
               <h3>{subTitle}</h3>
-              {subTitle ? (
+              {(subTitle && !favorites.has(selected))  ? (
                 <button type="submit" onClick={this.addFavorite}>
                   Add as a favorite
                 </button>
               ) : (
                 ""
               )}
+            </div>
+            <div className ="row">
+              {loading ? "Loading..." : value}
             </div>
           </div>
         </div>
