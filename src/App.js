@@ -1,9 +1,9 @@
 import React from "react";
 import "./App.css";
 import FavoritesList from "./FavoritesList";
-import getForecast from './GetForecast';
-import StoredFavorites from './StoredFavorites';
-import ForecastDisplay from './ForecastDisplay';
+import getForecast from "./GetForecast";
+import StoredFavorites from "./StoredFavorites";
+import ForecastDisplay from "./ForecastDisplay";
 
 class App extends React.Component {
   constructor(props) {
@@ -26,7 +26,9 @@ class App extends React.Component {
 
   handleSubmit(event) {
     const { query } = this.state;
-    this.handleClick(query.padStart(5, '0'));
+    // zipcodes are a minimum of 5 digits
+    // https://en.wikipedia.org/wiki/ZIP_Code
+    this.handleClick(query.padStart(5, "0"));
     event.preventDefault();
   }
 
@@ -36,8 +38,8 @@ class App extends React.Component {
       query: "",
       loading: true
     });
-    const { hourly, sevenDay, error} = await getForecast(zipcode);
-  this.setState({
+    const { hourly, sevenDay, error } = await getForecast(zipcode);
+    this.setState({
       loading: false,
       hourly,
       sevenDay,
@@ -61,7 +63,7 @@ class App extends React.Component {
 
   removeFavorite(zipcode) {
     const favorites = new Set(this.state.favorites);
-    favorites.delete(zipcode)
+    favorites.delete(zipcode);
     this.setState({ favorites });
     StoredFavorites.set(favorites);
   }
@@ -74,11 +76,9 @@ class App extends React.Component {
       loading,
       hourly,
       sevenDay,
-      error,
+      error
     } = this.state;
-    const subTitle = selected
-      ? `Weather for ${selected}`
-      : "";
+    const subTitle = selected ? `Weather for ${selected}` : "";
     return (
       <div className="container">
         <div className="row">
@@ -114,19 +114,21 @@ class App extends React.Component {
             </div>
             <div className="row">
               <h3>{subTitle}</h3>
-              {(subTitle && !favorites.has(selected))  ? (
+              {subTitle && !favorites.has(selected) ? (
                 <button type="submit" onClick={this.addFavorite}>
                   Add as a favorite
                 </button>
-              ) : ("")}
+              ) : (
+                ""
+              )}
             </div>
-            <div className ="row">
+            <div className="row">
               <ForecastDisplay
                 hourly={hourly}
                 sevenDay={sevenDay}
                 loading={loading}
                 error={error}
-                />
+              />
             </div>
           </div>
         </div>
